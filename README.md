@@ -48,3 +48,12 @@ SecureReport leverages blockchain technology to ensure the integrity and immutab
 - `npm run build`: Builds the app for production.
 - `npm run start`: Starts the production server.
 - `npm run lint`: Runs ESLint to check for code quality issues.
+
+### Designs
+
+<img width="1852" height="931" alt="image" src="https://github.com/user-attachments/assets/4adb4f8f-113c-4d6e-8410-dba8c0211428" />
+<img width="1852" height="931" alt="image" src="https://github.com/user-attachments/assets/9ec099f8-ef82-45ef-a69f-48f741124988" />
+<img width="1852" height="931" alt="image" src="https://github.com/user-attachments/assets/458cceaa-6363-463a-b5ca-4d898c862bfd" />
+
+
+
