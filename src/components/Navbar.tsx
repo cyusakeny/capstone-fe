@@ -17,8 +17,8 @@ export default function Navbar() {
                 <Link className="text-slate-600 dark:text-slate-400 hover:text-primary-navy dark:hover:text-white font-medium text-sm transition-colors" href="#">Security</Link>
             </div>
             <div className="flex items-center gap-4">
-                <button className="text-primary-navy dark:text-slate-300 text-sm font-bold hover:opacity-80">Help</button>
-                <button className="bg-primary-navy text-white px-5 py-2 rounded-lg text-sm font-bold shadow-lg shadow-navy-900/10 hover:bg-navy-800 transition-all">Get Started</button>
+                <Link href="/auth/citizen/login" className="text-primary-navy dark:text-slate-300 text-sm font-bold hover:opacity-80">Login</Link>
+                <Link href="/auth/citizen/signup" className="bg-primary-navy text-white px-5 py-2 rounded-lg text-sm font-bold shadow-lg shadow-navy-900/10 hover:bg-navy-800 transition-all">Get Started</Link>
             </div>
         </nav>
     );

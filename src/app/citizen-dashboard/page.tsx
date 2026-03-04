@@ -1,141 +1,79 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-
-interface Report {
-    id: string;
-    type: string;
-    date: string;
-    time: string;
-    hash: string;
-    status: "Verified" | "Processing" | "Archived";
-    icon: string;
-}
-
-const INITIAL_REPORTS: Report[] = [
-    {
-        id: "#NY-7729-X",
-        type: "Vehicle Theft",
-        date: "Oct 24, 2023",
-        time: "08:12 AM",
-        hash: "0x4a...f39e",
-        status: "Verified",
-        icon: "directions_car",
-    },
-    {
-        id: "#NY-8812-B",
-        type: "Attempted Fraud",
-        date: "Oct 23, 2023",
-        time: "04:30 PM",
-        hash: "0x7c...88a2",
-        status: "Processing",
-        icon: "warning",
-    },
-    {
-        id: "#NY-9021-A",
-        type: "Property Damage",
-        date: "Oct 20, 2023",
-        time: "11:15 AM",
-        hash: "0x1b...cc43",
-        status: "Archived",
-        icon: "home",
-    },
-];
-
-const SIDEBAR_LINKS = [
-    { id: "dashboard", label: "Dashboard", icon: "dashboard", href: "/citizen-dashboard" },
-    { id: "reports", label: "My Reports", icon: "description", href: "/my-reports" },
-    { id: "map", label: "Local Map", icon: "explore", href: "#" },
-    { id: "verifications", label: "Verifications", icon: "verified_user", href: "#" },
-    { id: "alerts", label: "Alerts", icon: "notifications", href: "#" },
-];
+import { usePathname } from "next/navigation";
+import CitizenSidebar from "@/components/CitizenSidebar";
+import { getReports } from "@/lib/api";
+import { Report } from "@/types/report";
 
 export default function CitizenDashboard() {
-    const [activeTab, setActiveTab] = useState("dashboard");
-    const [reports] = useState<Report[]>(INITIAL_REPORTS);
+    const pathname = usePathname();
+    const [reports, setReports] = useState<Report[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
+    const [user, setUser] = useState<{ name: string } | null>(null);
+
+    useEffect(() => {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            try {
+                setUser(JSON.parse(storedUser));
+            } catch (e) {
+                console.error("Failed to parse user from localStorage", e);
+            }
+        }
+    }, []);
+
+    const displayName = user?.name ? user.name.split(' ')[0] : "Citizen";
+
+    useEffect(() => {
+        const fetchLatestReports = async () => {
+            try {
+                setIsLoading(true);
+                const data = await getReports();
+                if (Array.isArray(data)) {
+                    // Sort by created_at descending and take latest 3
+                    const latest = data
+                        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                        .slice(0, 3);
+                    setReports(latest);
+                }
+            } catch (err: any) {
+                console.error("Failed to fetch dashboard reports:", err);
+                setError(err.message || "Failed to load recent activity");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchLatestReports();
+    }, []);
 
     const filteredReports = reports.filter((report) =>
-        report.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        report.id.toLowerCase().includes(searchQuery.toLowerCase())
+        (report.title || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (report.category || "").toLowerCase().includes(searchQuery.toLowerCase())
     );
+
+    const getIcon = (category: string) => {
+        const cat = category.toLowerCase();
+        if (cat.includes('theft') || cat.includes('robbery')) return 'directions_car';
+        if (cat.includes('fraud')) return 'warning';
+        if (cat.includes('property') || cat.includes('vandalism')) return 'home';
+        return 'description';
+    };
 
     return (
         <div className="flex min-h-screen bg-white">
             {/* Sidebar */}
-            <aside className="w-64 bg-sidebar-bg text-white flex flex-col fixed inset-y-0 left-0 z-50">
-                <div className="p-6 border-b border-white/10 flex items-center gap-3">
-                    <div className="bg-accent-blue p-1.5 rounded-lg">
-                        <span className="material-symbols-outlined text-white text-2xl">shield_person</span>
-                    </div>
-                    <div>
-                        <h1 className="font-bold text-lg leading-none tracking-tight">CitizenLink</h1>
-                        <p className="text-[10px] text-accent-blue font-bold uppercase tracking-widest mt-1">
-                            Secure Portal
-                        </p>
-                    </div>
-                </div>
-
-                <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
-                    {SIDEBAR_LINKS.map((link) => (
-                        <Link
-                            key={link.id}
-                            href={link.href}
-                            onClick={() => setActiveTab(link.id)}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab === link.id
-                                ? "bg-accent-blue text-white font-semibold"
-                                : "text-slate-400 hover:text-white hover:bg-white/10"
-                                }`}
-                        >
-                            <span
-                                className="material-symbols-outlined"
-                                style={{ fontVariationSettings: `'FILL' ${activeTab === link.id ? 1 : 0}` }}
-                            >
-                                {link.icon}
-                            </span>
-                            <span>{link.label}</span>
-                        </Link>
-                    ))}
-
-                    <div className="pt-4 pb-2 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                        Support
-                    </div>
-                    <Link href="#" className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
-                        <span className="material-symbols-outlined">help_center</span>
-                        <span>Help Center</span>
-                    </Link>
-                    <Link href="#" className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
-                        <span className="material-symbols-outlined">settings</span>
-                        <span>Settings</span>
-                    </Link>
-                </nav>
-
-                <div className="p-4 border-t border-white/10 bg-black/20">
-                    <div className="flex items-center gap-3">
-                        <div
-                            className="size-10 rounded-full border-2 border-accent-blue bg-cover bg-center shrink-0"
-                            style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDUU-E_7PjIXwtdQm5tf4vW95JEjs34Qc2Gjo3DVmzIVvDFP-IDJ4hOGDUI-lsc-5uZLIR1pL7HufOTxunNWJqfrR4mK3XyfFQYEaY7_IlA9CFfYyoBTEEIQ7B-xcBrZnL5rYILZDWQMwZoNBROrhjIdP8aEov0dNcS4AV14lNjlR9K1AyNWp1z4uHhFHQpeI_TVtc16pj7o9chmqGYDScx8cnnBFjl-M9MYs3QVisdaiVf5lwvmUW4egHhar8oL0jUytVBe5I-0m2k")' }}
-                        />
-                        <div className="flex-1 overflow-hidden text-left">
-                            <p className="text-sm font-bold truncate">James Detective</p>
-                            <div className="flex items-center gap-1">
-                                <span className="size-1.5 rounded-full bg-emerald-500"></span>
-                                <span className="text-[10px] text-emerald-500 font-medium whitespace-nowrap">Biometric Verified</span>
-                            </div>
-                        </div>
-                        <button className="text-slate-400 hover:text-white shrink-0">
-                            <span className="material-symbols-outlined text-sm">logout</span>
-                        </button>
-                    </div>
-                </div>
-            </aside>
+            <CitizenSidebar />
 
             {/* Main Content */}
             <main className="flex-1 ml-64 bg-slate-50/50 min-h-screen">
                 <header className="bg-white border-b border-border-gray h-16 sticky top-0 z-40 flex items-center justify-between px-8">
                     <div className="flex items-center gap-2">
-                        <span className="text-slate-500 text-sm font-medium capitalize">{activeTab}</span>
+                        <span className="text-slate-500 text-sm font-medium capitalize">{pathname.split('/').pop() || 'Dashboard'}</span>
                         <span className="material-symbols-outlined text-slate-400 text-sm">chevron_right</span>
                         <span className="text-primary-navy font-bold text-sm">Overview</span>
                     </div>
@@ -157,20 +95,20 @@ export default function CitizenDashboard() {
                         </button>
                         <div className="h-8 w-px bg-border-gray"></div>
                         <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-slate-500">Last login: Today, 08:42 AM</span>
+                            <span className="text-xs font-bold text-slate-500">Last login: Today, {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
                     </div>
                 </header>
 
                 <div className="p-8 max-w-7xl mx-auto">
                     <div className="mb-8">
-                        <h2 className="text-2xl font-bold text-primary-navy tracking-tight">Welcome back, James</h2>
-                        <p className="text-slate-500">Everything looks secure. You have 2 reports pending verification.</p>
+                        <h2 className="text-2xl font-bold text-primary-navy tracking-tight">Welcome back, {displayName}</h2>
+                        <p className="text-slate-500">Everything looks secure. You have {reports.filter(r => r.status.toLowerCase() === 'submitted' || r.status.toLowerCase() === 'pending').length} reports pending verification.</p>
                     </div>
 
                     {/* Action Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        <div className="bg-white p-6 rounded-xl border border-border-gray shadow-sm hover:shadow-md transition-shadow group cursor-pointer">
+                        <Link href="/submit-report" className="bg-white p-6 rounded-xl border border-border-gray shadow-sm hover:shadow-md transition-shadow group cursor-pointer block">
                             <div className="flex justify-between items-start mb-4">
                                 <div className="bg-accent-blue/10 p-3 rounded-lg text-accent-blue group-hover:bg-accent-blue group-hover:text-white transition-colors">
                                     <span className="material-symbols-outlined text-2xl">report_gmailerrorred</span>
@@ -179,7 +117,7 @@ export default function CitizenDashboard() {
                             </div>
                             <h3 className="font-bold text-primary-navy mb-1">New Report</h3>
                             <p className="text-sm text-slate-500">File a secure incident report with blockchain verification.</p>
-                        </div>
+                        </Link>
 
                         <div className="bg-white p-6 rounded-xl border border-border-gray shadow-sm hover:shadow-md transition-shadow group cursor-pointer">
                             <div className="flex justify-between items-start mb-4">
@@ -207,88 +145,118 @@ export default function CitizenDashboard() {
                     {/* Stats */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                         <div className="bg-white p-4 rounded-xl border border-border-gray border-l-4 border-l-accent-blue">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Reports</p>
-                            <p className="text-2xl font-bold text-primary-navy">04</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Recent Activity</p>
+                            <p className="text-2xl font-bold text-primary-navy">{reports.length.toString().padStart(2, '0')}</p>
                         </div>
                         <div className="bg-white p-4 rounded-xl border border-border-gray border-l-4 border-l-emerald-500">
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Verified Cases</p>
-                            <p className="text-2xl font-bold text-emerald-600">02</p>
+                            <p className="text-2xl font-bold text-emerald-600">{reports.filter(r => ['resolved', 'verified', 'closed'].includes(r.status.toLowerCase())).length.toString().padStart(2, '0')}</p>
                         </div>
                         <div className="bg-white p-4 rounded-xl border border-border-gray border-l-4 border-l-amber-500">
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Pending Review</p>
-                            <p className="text-2xl font-bold text-amber-600">01</p>
+                            <p className="text-2xl font-bold text-amber-600">{reports.filter(r => ['submitted', 'pending', 'open'].includes(r.status.toLowerCase())).length.toString().padStart(2, '0')}</p>
                         </div>
                         <div className="bg-white p-4 rounded-xl border border-border-gray border-l-4 border-l-slate-400">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Archived</p>
-                            <p className="text-2xl font-bold text-slate-600">01</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Records</p>
+                            <p className="text-2xl font-bold text-slate-600">--</p>
                         </div>
                     </div>
 
                     {/* Table */}
-                    <div className="bg-white rounded-xl border border-border-gray shadow-sm overflow-hidden">
+                    <div className="bg-white rounded-xl border border-border-gray shadow-sm overflow-hidden min-h-[400px]">
                         <div className="p-6 border-b border-border-gray flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div>
-                                <h3 className="text-lg font-bold text-primary-navy">Recent Reports</h3>
-                                <p className="text-sm text-slate-500">A detailed view of your submitted reports and their current status.</p>
+                                <h3 className="text-lg font-bold text-primary-navy">Latest Investigative Reports</h3>
+                                <p className="text-sm text-slate-500">Displaying your 3 most recent secure filings.</p>
                             </div>
                             <div className="flex items-center gap-2">
-                                <button className="px-4 py-2 border border-border-gray rounded-lg text-sm font-semibold hover:bg-slate-50 transition-colors">Filter</button>
-                                <button className="px-4 py-2 bg-primary-navy text-white rounded-lg text-sm font-semibold hover:bg-primary-navy/90 transition-colors">Export Data</button>
+                                <Link href="/my-reports" className="px-4 py-2 border border-border-gray rounded-lg text-sm font-semibold hover:bg-slate-50 transition-colors">View All Reports</Link>
+                                <button className="px-4 py-2 bg-primary-navy text-white rounded-lg text-sm font-semibold hover:bg-primary-navy/90 transition-colors">Export Ledger</button>
                             </div>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left">
                                 <thead>
                                     <tr className="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                        <th className="px-6 py-4">Case ID</th>
-                                        <th className="px-6 py-4">Report Type</th>
-                                        <th className="px-6 py-4">Date & Time</th>
+                                        <th className="px-6 py-4">Reference #</th>
+                                        <th className="px-6 py-4">Report Details</th>
+                                        <th className="px-6 py-4 text-center">Date & Time</th>
                                         <th className="px-6 py-4">Blockchain Hash</th>
-                                        <th className="px-6 py-4">Status</th>
+                                        <th className="px-6 py-4 text-center">Status</th>
                                         <th className="px-6 py-4 text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border-gray text-slate-700">
-                                    {filteredReports.map((report) => (
-                                        <tr key={report.id} className="hover:bg-slate-50/50 transition-colors">
-                                            <td className="px-6 py-4">
-                                                <span className="font-bold">{report.id}</span>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="material-symbols-outlined text-slate-400 text-lg">{report.icon}</span>
-                                                    <span className="text-sm font-medium">{report.type}</span>
+                                    {isLoading ? (
+                                        <tr>
+                                            <td colSpan={6} className="px-6 py-20 text-center">
+                                                <div className="flex flex-col items-center gap-3">
+                                                    <div className="size-8 border-3 border-accent-blue/20 border-t-accent-blue rounded-full animate-spin"></div>
+                                                    <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">Polling Secure Node...</p>
                                                 </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="text-sm">
-                                                    <p className="font-medium text-slate-900">{report.date}</p>
-                                                    <p className="text-slate-400 text-xs">{report.time}</p>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-2 text-xs font-mono text-slate-400 bg-slate-100 px-2 py-1 rounded w-fit">
-                                                    <span className="material-symbols-outlined text-sm">link</span>
-                                                    {report.hash}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${report.status === "Verified" ? "bg-emerald-100 text-emerald-700" :
-                                                    report.status === "Processing" ? "bg-blue-100 text-blue-700" :
-                                                        "bg-slate-100 text-slate-600"
-                                                    }`}>
-                                                    {report.status}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <button className="text-accent-blue font-bold text-xs hover:underline">View Details</button>
                                             </td>
                                         </tr>
-                                    ))}
-                                    {filteredReports.length === 0 && (
+                                    ) : error ? (
                                         <tr>
-                                            <td colSpan={6} className="px-6 py-8 text-center text-slate-500 text-sm">
-                                                No reports found matching your search.
+                                            <td colSpan={6} className="px-6 py-20 text-center text-red-500">
+                                                <span className="material-symbols-outlined text-4xl mb-2">error</span>
+                                                <p className="text-sm font-medium">{error}</p>
+                                            </td>
+                                        </tr>
+                                    ) : filteredReports.length > 0 ? (
+                                        filteredReports.map((report) => (
+                                            <tr key={report.id} className="hover:bg-slate-50/50 transition-colors group">
+                                                <td className="px-6 py-4">
+                                                    <span className="text-xs font-mono font-bold text-primary-navy bg-slate-100 px-2 py-1 rounded">
+                                                        {report.referenceNumber || report.id.slice(0, 8)}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="size-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-white transition-colors">
+                                                            <span className="material-symbols-outlined text-lg">{getIcon(report.category || '')}</span>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm font-bold text-slate-900 line-clamp-1">{report.title}</p>
+                                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">{report.category}</p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 text-center">
+                                                    <div className="text-sm">
+                                                        <p className="font-bold text-slate-700">{new Date(report.incident_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                                                        <p className="text-slate-400 text-[10px] font-bold">{report.incident_time}</p>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400 bg-slate-50 border border-slate-100 px-2 py-1.5 rounded-lg w-fit group-hover:bg-white transition-colors">
+                                                        <span className="material-symbols-outlined text-xs text-emerald-500">verified</span>
+                                                        {report.reporterHash ? `${report.reporterHash.slice(0, 6)}...${report.reporterHash.slice(-4)}` : "Computing..."}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 text-center">
+                                                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-sm border ${['resolved', 'closed', 'verified'].includes(report.status.toLowerCase()) ? "bg-emerald-50 text-emerald-700 border-emerald-100" :
+                                                        ['investigating', 'assigned'].includes(report.status.toLowerCase()) ? "bg-blue-50 text-blue-700 border-blue-100" :
+                                                            "bg-slate-50 text-slate-500 border-slate-100"
+                                                        }`}>
+                                                        {report.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <Link href={`/case-management/${report.id}`} className="inline-flex items-center justify-center size-8 rounded-lg hover:bg-white hover:text-accent-blue transition-all border border-transparent hover:border-slate-200">
+                                                        <span className="material-symbols-outlined text-lg">visibility</span>
+                                                    </Link>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={6} className="px-6 py-20 text-center">
+                                                <div className="flex flex-col items-center gap-2 opacity-40">
+                                                    <span className="material-symbols-outlined text-5xl">inventory_2</span>
+                                                    <p className="text-sm font-bold uppercase tracking-[0.2em]">No Digital Filings Found</p>
+                                                    <p className="text-xs">Your secure reports will appear here once submitted.</p>
+                                                </div>
                                             </td>
                                         </tr>
                                     )}
@@ -296,17 +264,13 @@ export default function CitizenDashboard() {
                             </table>
                         </div>
                         <div className="p-4 border-t border-border-gray bg-slate-50 flex items-center justify-between">
-                            <p className="text-xs text-slate-500 font-medium">
-                                Showing {filteredReports.length} of {reports.length} recent reports
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                                Secured Integrity Protocol v1.4.2
                             </p>
-                            <div className="flex gap-2">
-                                <button className="size-8 flex items-center justify-center rounded border border-border-gray bg-white text-slate-400 disabled:opacity-50 cursor-not-allowed">
-                                    <span className="material-symbols-outlined text-sm">chevron_left</span>
-                                </button>
-                                <button className="size-8 flex items-center justify-center rounded border border-border-gray bg-white text-slate-600 hover:bg-slate-50 transition-colors">
-                                    <span className="material-symbols-outlined text-sm">chevron_right</span>
-                                </button>
-                            </div>
+                            <Link href="/my-reports" className="text-xs font-bold text-accent-blue hover:underline flex items-center gap-1">
+                                Access Full Archives
+                                <span className="material-symbols-outlined text-sm">arrow_right_alt</span>
+                            </Link>
                         </div>
                     </div>
                 </div>
@@ -317,17 +281,20 @@ export default function CitizenDashboard() {
                             <span className="material-symbols-outlined text-white">verified_user</span>
                         </div>
                         <div className="flex-1">
-                            <h4 className="text-sm font-bold text-primary-navy">Military-Grade Security Protocol</h4>
-                            <p className="text-xs text-slate-600 mt-0.5">
-                                All transmissions are encrypted. Evidence hashes are immutable and stored on the blockchain ledger for legal integrity.
+                            <h4 className="text-sm font-bold text-primary-navy uppercase tracking-tight">Military-Grade Security Protocol</h4>
+                            <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
+                                All transmissions are end-to-end encrypted. Evidence hashes are immutable and stored on the decentralized public ledger for forensic legal integrity.
                             </p>
                         </div>
-                        <div className="text-right hidden sm:block">
-                            <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest block mb-1">Status: Active</span>
-                            <div className="flex gap-1 justify-end">
-                                <span className="size-1 bg-emerald-500 rounded-full"></span>
-                                <span className="size-1 bg-emerald-500 rounded-full"></span>
-                                <span className="size-1 bg-emerald-500 rounded-full"></span>
+                        <div className="text-right hidden lg:block">
+                            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest block mb-1.5 flex items-center gap-1.5 justify-end">
+                                <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                Ledger Node Active
+                            </span>
+                            <div className="flex gap-1 justify-end opacity-20">
+                                <span className="size-1 bg-primary-navy rounded-full"></span>
+                                <span className="size-1 bg-primary-navy rounded-full"></span>
+                                <span className="size-1 bg-primary-navy rounded-full"></span>
                             </div>
                         </div>
                     </div>

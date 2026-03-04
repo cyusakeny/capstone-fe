@@ -20,7 +20,7 @@ export default function OfficerSidebar() {
                 <div className="bg-white/10 p-2 rounded-lg">
                     <span className="material-symbols-outlined text-white">shield_lock</span>
                 </div>
-                <span className="font-bold text-lg tracking-tight">CaseGuard</span>
+                <span className="font-bold text-lg tracking-tight">Officer Portal</span>
             </div>
 
             <nav className="flex-1 px-4 space-y-1 mt-4">

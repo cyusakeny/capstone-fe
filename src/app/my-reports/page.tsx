@@ -1,57 +1,62 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-
-interface Report {
-    id: string;
-    category: string;
-    date: string;
-    status: "Resolved" | "Investigating" | "Pending Review";
-}
-
-const INITIAL_REPORTS: Report[] = [
-    {
-        id: "#POL-88231-X",
-        category: "Grand Theft Auto",
-        date: "Oct 24, 2023",
-        status: "Resolved",
-    },
-    {
-        id: "#POL-77402-B",
-        category: "Vandalism",
-        date: "Oct 15, 2023",
-        status: "Investigating",
-    },
-    {
-        id: "#POL-66129-A",
-        category: "Public Safety",
-        date: "Sep 28, 2023",
-        status: "Pending Review",
-    },
-    {
-        id: "#POL-55018-K",
-        category: "Missing Property",
-        date: "Sep 12, 2023",
-        status: "Resolved",
-    },
-];
+import { Report } from "@/types/report";
+import { apiFetch } from "@/lib/api";
 
 const STATUS_FILTERS = ["All", "Pending", "Investigating", "Resolved"] as const;
 
 export default function MyReports() {
-    const [reports] = useState<Report[]>(INITIAL_REPORTS);
+    const [reports, setReports] = useState<Report[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [activeFilter, setActiveFilter] = useState<string>("All");
+    const [user, setUser] = useState<{ name: string } | null>(null);
 
-    const filteredReports = reports.filter((report) => {
+    useEffect(() => {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            try {
+                setUser(JSON.parse(storedUser));
+            } catch (e) {
+                console.error("Failed to parse user from localStorage", e);
+            }
+        }
+    }, []);
+
+    const displayName = user?.name || "Verified Citizen";
+    const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=020617&color=fff&bold=true`;
+
+    useEffect(() => {
+        const fetchReports = async () => {
+            try {
+                setIsLoading(true);
+                const data = await apiFetch('/reports');
+                setReports(Array.isArray(data) ? data : []);
+            } catch (err: any) {
+                console.error("Failed to fetch reports:", err);
+                setError(err.message || "Failed to load reports");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchReports();
+    }, []);
+
+    const filteredReports = reports.filter((report: Report) => {
         const matchesSearch =
-            report.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            report.category.toLowerCase().includes(searchQuery.toLowerCase());
+            (report.category?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
+            (report.title?.toLowerCase() || "").includes(searchQuery.toLowerCase());
+
+        const statusLower = report.status?.toLowerCase() || "";
+        const filterLower = activeFilter.toLowerCase();
 
         if (activeFilter === "All") return matchesSearch;
-        if (activeFilter === "Pending") return matchesSearch && report.status === "Pending Review";
-        return matchesSearch && report.status === activeFilter;
+        if (activeFilter === "Pending") return matchesSearch && (statusLower === "pending" || statusLower === "submitted");
+        return matchesSearch && statusLower === filterLower;
     });
 
     return (
@@ -73,12 +78,12 @@ export default function MyReports() {
                         <button className="material-symbols-outlined text-slate-300 hover:text-white transition-colors">notifications</button>
                         <div className="h-8 w-[1px] bg-slate-700 mx-2"></div>
                         <div className="flex items-center gap-3">
-                            <div className="text-right hidden sm:block">
-                                <p className="text-sm font-semibold leading-none">John Doe</p>
+                            <div className="text-right hidden sm:block text-white">
+                                <p className="text-sm font-semibold leading-none">{displayName}</p>
                                 <p className="text-[11px] text-slate-400">Verified Citizen</p>
                             </div>
-                            <div className="size-9 rounded-full bg-slate-700 flex items-center justify-center overflow-hidden border border-slate-600">
-                                <span className="material-symbols-outlined text-slate-300">person</span>
+                            <div className="size-9 rounded-full bg-slate-700 flex items-center justify-center overflow-hidden border border-slate-600 shadow-sm">
+                                <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
                             </div>
                         </div>
                     </div>
@@ -127,6 +132,13 @@ export default function MyReports() {
                     </div>
                 </div>
 
+                {error && (
+                    <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600 flex items-center gap-3">
+                        <span className="material-symbols-outlined">error</span>
+                        <p className="font-medium">{error}</p>
+                    </div>
+                )}
+
                 <div className="bg-white rounded-xl border border-border-light overflow-hidden shadow-sm">
                     <div className="p-4 border-b border-border-light bg-slate-50/50 flex flex-col lg:flex-row gap-4 justify-between items-center">
                         <div className="flex items-center gap-2 w-full lg:w-auto">
@@ -134,18 +146,15 @@ export default function MyReports() {
                                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
                                 <input
                                     className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-accent-blue focus:border-transparent outline-none transition-all"
-                                    placeholder="Search report ID, category..."
+                                    placeholder="Search reports..."
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
                             </div>
-                            <button className="p-2 border border-slate-200 rounded-lg bg-white hover:bg-slate-50 text-slate-600 transition-colors">
-                                <span className="material-symbols-outlined text-xl">filter_list</span>
-                            </button>
                         </div>
                         <div className="flex items-center gap-3 w-full lg:w-auto overflow-x-auto no-scrollbar py-1">
-                            <span className="text-sm font-medium text-slate-500 whitespace-nowrap">Filter by:</span>
+                            <span className="text-sm font-medium text-slate-500 whitespace-nowrap">Filter:</span>
                             <div className="flex gap-2">
                                 {STATUS_FILTERS.map((filter) => (
                                     <button
@@ -167,51 +176,57 @@ export default function MyReports() {
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-slate-50 border-b border-border-light">
-                                    <th className="px-6 py-4 text-xs font-bold uppercase text-slate-500 tracking-wider">Report ID</th>
+                                    <th className="px-6 py-4 text-xs font-bold uppercase text-slate-500 tracking-wider">Reference #</th>
+                                    <th className="px-6 py-4 text-xs font-bold uppercase text-slate-500 tracking-wider">Title</th>
                                     <th className="px-6 py-4 text-xs font-bold uppercase text-slate-500 tracking-wider">Category</th>
                                     <th className="px-6 py-4 text-xs font-bold uppercase text-slate-500 tracking-wider">Date</th>
                                     <th className="px-6 py-4 text-xs font-bold uppercase text-slate-500 tracking-wider">Status</th>
-                                    <th className="px-6 py-4 text-xs font-bold uppercase text-slate-500 tracking-wider">Blockchain</th>
                                     <th className="px-6 py-4 text-xs font-bold uppercase text-slate-500 tracking-wider text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border-light">
-                                {filteredReports.map((report) => (
-                                    <tr key={report.id} className="hover:bg-slate-50 transition-colors group">
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="font-mono font-bold text-slate-700 text-sm">{report.id}</span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{report.category}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{report.date}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 w-fit ${report.status === "Resolved" ? "bg-emerald-100 text-emerald-700" :
-                                                report.status === "Investigating" ? "bg-blue-100 text-blue-700" :
-                                                    "bg-slate-100 text-slate-600"
-                                                }`}>
-                                                <span className={`size-2 rounded-full ${report.status === "Resolved" ? "bg-emerald-600" :
-                                                    report.status === "Investigating" ? "bg-blue-600" :
-                                                        "bg-slate-400"
-                                                    }`}></span>
-                                                {report.status}
+                                {isLoading ? (
+                                    <tr>
+                                        <td colSpan={6} className="px-6 py-12 text-center">
+                                            <div className="flex flex-col items-center gap-3">
+                                                <div className="size-8 border-4 border-accent-blue/30 border-t-accent-blue rounded-full animate-spin"></div>
+                                                <p className="text-sm text-slate-500 font-medium">Loading reports...</p>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <button className="flex items-center gap-1.5 text-accent-blue text-sm font-medium hover:underline">
-                                                <span className="material-symbols-outlined text-[18px] fill-1">verified_user</span>
-                                                Verify Tx
-                                            </button>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                                            <Link href="/case-management" className="text-slate-400 hover:text-accent-blue transition-colors">
-                                                <span className="material-symbols-outlined">visibility</span>
-                                            </Link>
-                                        </td>
                                     </tr>
-                                ))}
-                                {filteredReports.length === 0 && (
+                                ) : filteredReports.length > 0 ? (
+                                    filteredReports.map((report) => (
+                                        <tr key={report.id} className="hover:bg-slate-50 transition-colors group">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-primary-navy">{report.referenceNumber || report.id.slice(0, 8)}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-medium">{report.title}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{report.category}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{new Date(report.incident_date).toLocaleDateString()}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 w-fit ${['resolved', 'closed'].includes(report.status.toLowerCase()) ? "bg-emerald-100 text-emerald-700" :
+                                                    ['investigating', 'assigned'].includes(report.status.toLowerCase()) ? "bg-blue-100 text-blue-700" :
+                                                        "bg-slate-100 text-slate-600"
+                                                    }`}>
+                                                    <span className={`size-2 rounded-full ${['resolved', 'closed'].includes(report.status.toLowerCase()) ? "bg-emerald-600" :
+                                                        ['investigating', 'assigned'].includes(report.status.toLowerCase()) ? "bg-blue-600" :
+                                                            "bg-slate-400"
+                                                        }`}></span>
+                                                    {report.status}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-right">
+                                                <Link href={`/case-management/${report.id}`} className="text-slate-400 hover:text-accent-blue transition-colors">
+                                                    <span className="material-symbols-outlined">visibility</span>
+                                                </Link>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
                                     <tr>
-                                        <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
-                                            No reports found.
+                                        <td colSpan={6} className="px-6 py-12 text-center">
+                                            <div className="flex flex-col items-center gap-2">
+                                                <span className="material-symbols-outlined text-slate-300 text-4xl">inventory_2</span>
+                                                <p className="text-sm text-slate-500 italic">No reports found matching your criteria.</p>
+                                            </div>
                                         </td>
                                     </tr>
                                 )}
@@ -236,7 +251,7 @@ export default function MyReports() {
                     </div>
                     <div>
                         <h4 className="text-sm font-bold text-slate-900">End-to-End Immutable Ledger</h4>
-                        <p className="text-xs text-slate-600 mt-0.5">Every action on your reports is timestamped and hashed onto the public ledger. You can verify the integrity of the investigation process by clicking the verification link next to each report ID.</p>
+                        <p className="text-xs text-slate-600 mt-0.5">Every action on your reports is timestamped and hashed onto the public ledger. You can verify the integrity of the investigation process by clicking the verification link next to each report.</p>
                     </div>
                 </div>
             </main>
