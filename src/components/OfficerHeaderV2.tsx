@@ -25,10 +25,6 @@ export default function OfficerHeaderV2() {
                     <span className="material-symbols-outlined">notifications</span>
                     <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white"></span>
                 </button>
-                <button className="flex items-center gap-2 bg-primary text-white (color: #136dec) px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-primary/90 transition-colors">
-                    <span className="material-symbols-outlined text-[18px]">add</span>
-                    New Incident
-                </button>
             </div>
         </header>
     );

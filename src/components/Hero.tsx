@@ -28,10 +28,10 @@ export default function Hero() {
                         A professional, tamper-proof system for crime reporting and investigation management. Ensuring institutional integrity at every digital touchpoint.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md justify-center">
-                        <Link href="/citizen-dashboard" className="px-8 py-4 bg-accent-blue text-white rounded-xl text-base font-bold shadow-xl shadow-accent-blue/20 hover:bg-accent-blue/90 transition-all transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center">
+                        <Link href="/auth/citizen/login" className="px-8 py-4 bg-accent-blue text-white rounded-xl text-base font-bold shadow-xl shadow-accent-blue/20 hover:bg-accent-blue/90 transition-all transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center">
                             Citizen Portal
                         </Link>
-                        <Link href="/officer/case-management" className="px-8 py-4 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-xl text-base font-bold hover:bg-white/20 transition-all transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center">
+                        <Link href="/auth/officer/login" className="px-8 py-4 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-xl text-base font-bold hover:bg-white/20 transition-all transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center">
                             Officer Login
                         </Link>
                     </div>

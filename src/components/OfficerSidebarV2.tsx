@@ -6,14 +6,38 @@ import { usePathname } from "next/navigation";
 
 const NAV_LINKS = [
     { id: "dashboard", label: "Dashboard", icon: "dashboard", href: "/officer/case-management" },
-    { id: "cases", label: "Case Files", icon: "folder_open", href: "#" },
-    { id: "blockchain", label: "Blockchain Ledger", icon: "link", href: "#" },
-    { id: "map", label: "Jurisdiction Map", icon: "map", href: "#" },
-    { id: "reports", label: "Intelligence Reports", icon: "bar_chart", href: "#" },
+    { id: "personnel", label: "Personnel Management", icon: "folder_shared", href: "/officer/case-management/case-files", adminOnly: true },
+    { id: "logs", label: "My Logs", icon: "link", href: "/officer/logs" },
+    { id: "reports", label: "Intelligence Reports", icon: "description", href: "/officer/reports" },
+    { id: "profile", label: "My Profile", icon: "account_circle", href: "/officer/profile" },
 ];
 
 export default function OfficerSidebarV2() {
     const pathname = usePathname();
+    const [user, setUser] = React.useState<{ name: string; role: string; type?: string } | null>(null);
+
+    React.useEffect(() => {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            try {
+                setUser(JSON.parse(storedUser));
+            } catch (e) {
+                console.error("Failed to parse officer from localStorage", e);
+            }
+        }
+    }, []);
+
+    const displayName = user?.name || "Officer Terminal";
+    const userRole = user?.role || "OFFICER";
+    const isAdmin = userRole === 'ADMIN';
+
+    const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=2563eb&color=fff&bold=true`;
+
+    const handleLogout = () => {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('user');
+        window.location.href = '/auth/officer/login';
+    };
 
     return (
         <aside className="w-64 bg-primary-navy text-slate-300 flex-shrink-0 flex flex-col hidden lg:flex h-screen fixed left-0 top-0">
@@ -22,11 +46,14 @@ export default function OfficerSidebarV2() {
                     <div className="size-8 bg-primary rounded-lg flex items-center justify-center">
                         <span className="material-symbols-outlined text-white text-xl">shield</span>
                     </div>
-                    <h1 className="font-bold text-white tracking-tight text-lg">CaseGuard AI</h1>
+                    <h1 className="font-bold text-white tracking-tight text-lg">Officer Portal</h1>
                 </div>
 
                 <nav className="space-y-1">
                     {NAV_LINKS.map((link) => {
+                        // Skip rendering if it's admin-only and user is not admin
+                        if (link.adminOnly && !isAdmin) return null;
+
                         const isActive = pathname === link.href;
                         return (
                             <Link
@@ -59,16 +86,19 @@ export default function OfficerSidebarV2() {
                 </div>
 
                 <div className="mt-6 flex items-center gap-3 px-2">
-                    <div
-                        className="size-10 rounded-full bg-cover bg-center border border-white/20"
-                        style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDVfiXIl3wwAH-_ThHy9yLAypQatdq1wfpiLbZMWuFXObz5ckVqlcOcghtdlp4T_TWwbnXLxcCihVvtx2IxEBEb_YaXbOOYaK1d_fCjHBljQZXioFfE8d-CKYn0VJflxTJGm3dYsStx9Qp7TuZ7qwBiH9QK9AG4uEsD0B54EQl2PCud3QqClTwxcEXS0wdKpye7-zHnE_3VfF3l_mNFs8Bm0kMpFRFpJRXUg8bOudrX8mNzIA7iBb8A2LrRRxNOd8C6oDT6WlbWQxDl")' }}
-                    ></div>
-                    <div className="overflow-hidden">
-                        <p className="text-xs font-bold text-white truncate">Sgt. Miller</p>
-                        <p className="text-[10px] text-slate-500 font-medium">Badge #8824</p>
+                    <div className="size-10 rounded-full border border-white/20 shadow-sm overflow-hidden shrink-0">
+                        <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
                     </div>
-                    <button className="ml-auto text-slate-500 hover:text-white">
-                        <span className="material-symbols-outlined text-xl">settings</span>
+                    <div className="flex-1 overflow-hidden">
+                        <p className="text-xs font-bold text-white truncate">{displayName}</p>
+                        <p className="text-[10px] text-slate-500 font-medium truncate">{userRole}</p>
+                    </div>
+                    <button
+                        onClick={handleLogout}
+                        className="ml-auto text-slate-500 hover:text-white transition-colors"
+                        title="Sign Out"
+                    >
+                        <span className="material-symbols-outlined text-xl">logout</span>
                     </button>
                 </div>
             </div>
