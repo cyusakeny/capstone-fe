@@ -13,6 +13,13 @@ SecureReport leverages blockchain technology to ensure the integrity and immutab
 - **Blockchain Verification**: All reports are hashed and stored on the blockchain to prevent tampering.
 - **Modern UI**: Clean, responsive design built with Next.js and Tailwind CSS.
 
+## Links
+
+- **Hosted App**: [https://secure-verified-report.vercel.app/](https://secure-verified-report.vercel.app/)
+- **Demo Video**: [Watch Demo](https://www.veed.io/view/60de6ae6-52c4-4b79-a787-c0861565a6ed?source=editor&panel=share)
+- **Backend Repository**: [https://github.com/cyusakeny/capstone-backend](https://github.com/cyusakeny/capstone-backend)
+
+
 ## Getting Started
 
 ### Prerequisites
@@ -25,7 +32,7 @@ SecureReport leverages blockchain technology to ensure the integrity and immutab
 1. Clone the repository:
    ```bash
    git clone <repository-url>
-   cd frontend
+   cd repo
    ```
 
 2. Install dependencies:
@@ -40,14 +47,8 @@ SecureReport leverages blockchain technology to ensure the integrity and immutab
    npm run dev
    ```
 
-2. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
+2. Open [http://localhost:3001](http://localhost:3001) in your browser to see the application.
 
-## Available Scripts
-
-- `npm run dev`: Runs the app in development mode.
-- `npm run build`: Builds the app for production.
-- `npm run start`: Starts the production server.
-- `npm run lint`: Runs ESLint to check for code quality issues.
 
 ### Designs
 
