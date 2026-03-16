@@ -33,15 +33,15 @@ export default function SubmitReport() {
     const router = useRouter();
     const [currentStep, setCurrentStep] = useState<Step>(1);
     const [formData, setFormData] = useState<FormData>({
-        reporterName: "James Detective",
-        reporterPhone: "+1 (555) 0123",
-        reporterEmail: "james.detective@example.com",
+        reporterName: "",
+        reporterPhone: "",
+        reporterEmail: "",
         title: "",
         category: "Theft or Robbery",
         incident_date: new Date().toISOString().slice(0, 16),
-        location: "842 Downtown Ave, District 4",
-        latitude: "40.7128",
-        longitude: "-74.0060",
+        location: "",
+        latitude: "",
+        longitude: "",
         description: "",
         evidence: [],
     });
@@ -55,8 +55,23 @@ export default function SubmitReport() {
         setFormData((prev) => ({ ...prev, ...data }));
     };
 
-    const nextStep = () => setCurrentStep((prev) => (prev < 4 ? (prev + 1) as Step : prev));
-    const prevStep = () => setCurrentStep((prev) => (prev > 1 ? (prev - 1) as Step : prev));
+    const nextStep = () => {
+        // Validation logic
+        if (currentStep === 2) {
+            if (!formData.title || !formData.latitude || !formData.longitude || !formData.location) {
+                setError("Please fill in all incident details, including coordinates and location.");
+                return;
+            }
+        }
+
+        setError(null);
+        setCurrentStep((prev) => (prev < 4 ? (prev + 1) as Step : prev));
+    };
+
+    const prevStep = () => {
+        setError(null);
+        setCurrentStep((prev) => (prev > 1 ? (prev - 1) as Step : prev));
+    };
 
     const handleSubmit = async () => {
         setIsLoading(true);
@@ -165,6 +180,7 @@ export default function SubmitReport() {
                                     value={formData.reporterName}
                                     onChange={(e) => updateFormData({ reporterName: e.target.value })}
                                     className="w-full h-12 rounded-lg border-slate-200 focus:border-accent-blue focus:ring-accent-blue px-3 outline-none transition-all"
+                                    placeholder="Enter your full name"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -240,6 +256,7 @@ export default function SubmitReport() {
                                     value={formData.latitude}
                                     onChange={(e) => updateFormData({ latitude: e.target.value })}
                                     className="w-full h-12 rounded-lg border-slate-200 focus:border-accent-blue focus:ring-accent-blue px-3 outline-none transition-all"
+                                    required
                                 />
                             </div>
                             <div className="space-y-2">
@@ -250,6 +267,7 @@ export default function SubmitReport() {
                                     value={formData.longitude}
                                     onChange={(e) => updateFormData({ longitude: e.target.value })}
                                     className="w-full h-12 rounded-lg border-slate-200 focus:border-accent-blue focus:ring-accent-blue px-3 outline-none transition-all"
+                                    required
                                 />
                             </div>
                         </div>
@@ -266,7 +284,8 @@ export default function SubmitReport() {
                                 value={formData.location}
                                 onChange={(e) => updateFormData({ location: e.target.value })}
                                 className="w-full h-12 rounded-lg border-slate-200 focus:border-accent-blue focus:ring-accent-blue px-3 outline-none transition-all mt-2"
-                                placeholder="Enter address..."
+                                placeholder="Enter full address..."
+                                required
                             />
                         </div>
                     </div>
