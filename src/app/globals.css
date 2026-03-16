@@ -34,8 +34,125 @@
 .dark {
   --background: var(--color-background-dark);
   --foreground: #f1f5f9;
-  /* slate-100 equivalent */
+  --surface: #0f172a;
+  --surface-hover: #1e293b;
+  --border: #334155;
+  --text-primary: #ffffff;
+  --text-secondary: #cbd5e1;
 }
+
+.high-contrast {
+  --background: #ffffff;
+  --foreground: #000000;
+  --surface: #ffffff;
+  --surface-hover: #eeeeee;
+  --border: #000000;
+  --text-primary: #000000;
+  --text-secondary: #000000;
+  --color-accent-blue: #0000cc;
+  --color-border-gray: #000000;
+  --color-border-light: #000000;
+  --color-navy-900: #000000;
+  --color-sidebar-bg: #000000;
+}
+
+/* Global Overrides for Dark & High Contrast Modes */
+.dark,
+.high-contrast {
+
+  /* Background overrides */
+  & .bg-white,
+  & .bg-slate-50,
+  & .bg-slate-100,
+  & .bg-slate-200 {
+    background-color: var(--surface) !important;
+  }
+
+  & .bg-slate-50\/50,
+  & .bg-slate-100\/50 {
+    background-color: rgba(15, 23, 42, 0.5) !important;
+  }
+
+  & .hover\:bg-slate-50:hover,
+  & .hover\:bg-slate-100:hover,
+  & .hover\:bg-slate-200:hover {
+    background-color: var(--surface-hover) !important;
+  }
+
+  /* Text overrides - Targeting any dark text shades */
+  & .text-slate-950,
+  & .text-slate-900,
+  & .text-slate-800,
+  & .text-slate-700,
+  & .text-navy-900,
+  & .text-primary-navy,
+  & .text-gray-900,
+  & .text-gray-800,
+  & .text-gray-700,
+  & .text-zinc-900,
+  & .text-zinc-800,
+  & .text-zinc-700,
+  & .text-black {
+    color: var(--text-primary) !important;
+  }
+
+  & .text-slate-600,
+  & .text-slate-500,
+  & .text-slate-400,
+  & .text-gray-600,
+  & .text-gray-500,
+  & .text-gray-400 {
+    color: var(--text-secondary) !important;
+  }
+
+  /* Border overrides */
+  & .border-slate-100,
+  & .border-slate-200,
+  & .border-border-gray,
+  & .border-border-light {
+    border-color: var(--border) !important;
+  }
+
+  /* Header/Footer specifics if needed */
+  & header.bg-white,
+  & footer.bg-white {
+    background-color: var(--surface) !important;
+    border-color: var(--border) !important;
+  }
+
+  /* Input fields */
+  & input,
+  & textarea,
+  & select {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+  }
+}
+
+.high-contrast {
+  & * {
+    border-color: #000000 !important;
+    border-width: 1px !important;
+    text-decoration-thickness: 2px !important;
+  }
+
+  & input,
+  & textarea,
+  & select {
+    background-color: #ffffff !important;
+    border-color: #000000 !important;
+    color: #000000 !important;
+    outline: 2px solid #000000 !important;
+  }
+}
+
+.reduced-motion * {
+  transition-duration: 0.001ms !important;
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+}
+
 
 body {
   background: var(--background);

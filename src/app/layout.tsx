@@ -13,13 +13,15 @@ export const metadata: Metadata = {
   description: "A professional, tamper-proof system for crime reporting and investigation management.",
 };
 
+import { ThemeProvider } from "@/providers/ThemeProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="light">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link
           rel="stylesheet"
@@ -29,7 +31,9 @@ export default function RootLayout({
       <body
         className={`${publicSans.variable} antialiased font-display`}
       >
-        {children}
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Report } from "@/types/report";
 import { apiFetch } from "@/lib/api";
@@ -59,6 +59,22 @@ export default function MyReports() {
         return matchesSearch && statusLower === filterLower;
     });
 
+    const stats = useMemo(() => {
+        const activeCount = reports.filter(r =>
+            ['assigned'].includes(r.status.toLowerCase())
+        ).length;
+
+        const resolvedCount = reports.filter(r =>
+            ['accepted', 'rejected', 'resolved', 'closed'].includes(r.status.toLowerCase())
+        ).length;
+
+        return {
+            activeCount: activeCount.toString().padStart(2, '0'),
+            resolvedCount: resolvedCount.toString().padStart(2, '0'),
+            verifiedCount: reports.length.toString().padStart(2, '0')
+        };
+    }, [reports]);
+
     return (
         <div className="text-slate-900 min-h-screen flex flex-col bg-background-light">
             <header className="bg-navy-header text-white sticky top-0 z-50">
@@ -109,7 +125,7 @@ export default function MyReports() {
                         </div>
                         <div>
                             <p className="text-sm text-slate-500 font-medium">Active Investigations</p>
-                            <p className="text-2xl font-bold text-slate-900">03</p>
+                            <p className="text-2xl font-bold text-slate-900">{stats.activeCount}</p>
                         </div>
                     </div>
                     <div className="bg-white p-5 rounded-xl border border-border-light flex items-center gap-4 shadow-sm">
@@ -118,7 +134,7 @@ export default function MyReports() {
                         </div>
                         <div>
                             <p className="text-sm text-slate-500 font-medium">Resolved Cases</p>
-                            <p className="text-2xl font-bold text-slate-900">12</p>
+                            <p className="text-2xl font-bold text-slate-900">{stats.resolvedCount}</p>
                         </div>
                     </div>
                     <div className="bg-white p-5 rounded-xl border border-border-light flex items-center gap-4 shadow-sm">
@@ -127,7 +143,7 @@ export default function MyReports() {
                         </div>
                         <div>
                             <p className="text-sm text-slate-500 font-medium">Verified Records</p>
-                            <p className="text-2xl font-bold text-slate-900">15</p>
+                            <p className="text-2xl font-bold text-slate-900">{stats.verifiedCount}</p>
                         </div>
                     </div>
                 </div>

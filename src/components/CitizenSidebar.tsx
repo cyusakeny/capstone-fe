@@ -73,7 +73,7 @@ export default function CitizenSidebar() {
                     <span className="material-symbols-outlined">help_center</span>
                     <span>Help Center</span>
                 </Link>
-                <Link href="#" className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+                <Link href="/citizen-dashboard/settings" className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
                     <span className="material-symbols-outlined">settings</span>
                     <span>Settings</span>
                 </Link>
