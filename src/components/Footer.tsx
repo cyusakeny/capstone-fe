@@ -24,8 +24,9 @@ export default function Footer() {
                         </div>
                         <div className="flex flex-col gap-4 text-center md:text-left">
                             <h5 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">Legal</h5>
-                            <Link className="text-slate-500 hover:text-primary-navy dark:text-slate-400 dark:hover:text-white text-sm transition-colors" href="#">Privacy Policy</Link>
-                            <Link className="text-slate-500 hover:text-primary-navy dark:text-slate-400 dark:hover:text-white text-sm transition-colors" href="#">Terms of Service</Link>
+                            <Link className="text-slate-500 hover:text-primary-navy dark:text-slate-400 dark:hover:text-white text-sm transition-colors" href="/legal#privacy">Privacy Policy</Link>
+                            <Link className="text-slate-500 hover:text-primary-navy dark:text-slate-400 dark:hover:text-white text-sm transition-colors" href="/legal#terms">Terms of Service</Link>
+                            <Link className="text-slate-500 hover:text-primary-navy dark:text-slate-400 dark:hover:text-white text-sm transition-colors" href="/legal#eula">EULA</Link>
                         </div>
                         <div className="flex flex-col gap-4 text-center md:text-left">
                             <h5 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">Contact</h5>
