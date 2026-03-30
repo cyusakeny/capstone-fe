@@ -150,6 +150,10 @@ export async function getBlockchainUserAudits(userId: string) {
     return apiFetch(`/blockchain/audit/user/${userId}`);
 }
 
+export async function getAccessLogsByUserId(userId: string) {
+    return apiFetch(`/access-logs/user/${userId}`);
+}
+
 export async function getBlockchainReportEvidence(reportId: string) {
     return apiFetch(`/blockchain/report/${reportId}/evidence`);
 }
