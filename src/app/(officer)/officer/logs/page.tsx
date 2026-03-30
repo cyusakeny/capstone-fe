@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import OfficerHeaderV2 from "@/components/OfficerHeaderV2";
-import { getBlockchainUserAudits } from "@/lib/api";
+import { getBlockchainUserAudits, getAccessLogsByUserId } from "@/lib/api";
 
 interface AccessLog {
     id: string;
@@ -46,11 +46,8 @@ export default function OfficerLogsPage() {
     const fetchLogs = async (userId: string) => {
         try {
             setLoading(true);
-            const response = await fetch(`http://localhost:5000/access-logs/user/${userId}`);
-            if (response.ok) {
-                const data = await response.json();
-                setLogs(data);
-            }
+            const data = await getAccessLogsByUserId(userId);
+            setLogs(data);
         } catch (error) {
             console.error("Error fetching logs:", error);
         } finally {
